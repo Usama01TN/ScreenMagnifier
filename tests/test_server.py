@@ -12,7 +12,7 @@ from struct import pack
 ROOT = dirname(dirname(abspath(__file__)))  # type: str
 BLOCK_QT = '''
 from importlib.abc import MetaPathFinder
-from numpy import run_module
+from runpy import run_module
 import sys
 
 class BlockQt(MetaPathFinder):
