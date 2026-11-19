@@ -11,7 +11,7 @@ from os.path import join, abspath
 from os import environ
 from sys import platform
 
-ROOT = bspath(join(SPECPATH, '..', '..'))  # .github/packaging -> project
+ROOT = abspath(join(SPECPATH, '..', '..'))  # .github/packaging -> project
 QT_API = environ.get('SM_QT_API', 'pyqt6').lower()
 BINDING = {'pyqt6': 'PyQt6', 'pyqt5': 'PyQt5', 'pyside6': 'PySide6', 'pyside2': 'PySide2'}[QT_API]
 QT_MODULES = ('QtCore', 'QtGui', 'QtWidgets', 'QtNetwork')  # the only Qt modules the application uses
