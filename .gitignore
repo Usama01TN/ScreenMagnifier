@@ -1,0 +1,12 @@
+*.egg-info/
+*.pyc
+*.pyd
+*.c
+.idea/
+.ruff_cache/
+.vscode/
+__pycache__/
+_buildinfo.py
+build/
+dist/
+ScreenMagnifier/facedetector/models/*.onnx

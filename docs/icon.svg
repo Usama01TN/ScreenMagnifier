@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+    <!-- ScreenMagnifier icon: magnifier over colour pixels with the picked pixel outlined. Original artwork. -->
+    <defs>
+        <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#252E58"/>
+            <stop offset="1" stop-color="#0D1124"/>
+        </linearGradient>
+        <radialGradient id="glow" cx="0.40" cy="0.38" r="0.6">
+            <stop offset="0" stop-color="#4F6BFF" stop-opacity="0.38"/>
+            <stop offset="1" stop-color="#4F6BFF" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#8CBBFF"/>
+            <stop offset="0.5" stop-color="#4F8BFF"/>
+            <stop offset="1" stop-color="#8A5CFF"/>
+        </linearGradient>
+        <linearGradient id="handle" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#F2F4FA"/>
+            <stop offset="1" stop-color="#97A3C2"/>
+        </linearGradient>
+        <linearGradient id="shine" x1="0" y1="0" x2="0.4" y2="1">
+            <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.42"/>
+            <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0"/>
+        </linearGradient>
+        <clipPath id="lens">
+            <circle cx="404" cy="404" r="238"/>
+        </clipPath>
+    </defs>
+    <rect x="32" y="32" width="960" height="960" rx="216" fill="url(#tile)"/>
+    <rect x="32" y="32" width="960" height="960" rx="216" fill="url(#glow)"/>
+    <rect x="34" y="34" width="956" height="956" rx="214" fill="none" stroke="#FFFFFF" stroke-opacity="0.09"
+          stroke-width="4"/>
+    <g transform="rotate(-45 404 404)">
+        <rect x="342" y="666" width="124" height="250" rx="62" fill="#05070F" opacity="0.5"
+              transform="translate(-14 12)"/>
+        <rect x="342" y="666" width="124" height="250" rx="62" fill="url(#handle)"/>
+        <rect x="360" y="666" width="26" height="220" rx="13" fill="#FFFFFF" opacity="0.45"/>
+        <rect x="356" y="642" width="96" height="62" rx="16" fill="#56607D"/>
+    </g>
+    <g clip-path="url(#lens)">
+        <rect x="166.0" y="166.0" width="96.0" height="96.0" fill="#FF4D8D"/>
+        <rect x="261.2" y="166.0" width="96.0" height="96.0" fill="#FF7A45"/>
+        <rect x="356.4" y="166.0" width="96.0" height="96.0" fill="#FFB020"/>
+        <rect x="451.6" y="166.0" width="96.0" height="96.0" fill="#FFD84D"/>
+        <rect x="546.8" y="166.0" width="96.0" height="96.0" fill="#2BD47D"/>
+        <rect x="166.0" y="261.2" width="96.0" height="96.0" fill="#FF7A45"/>
+        <rect x="261.2" y="261.2" width="96.0" height="96.0" fill="#FFB020"/>
+        <rect x="356.4" y="261.2" width="96.0" height="96.0" fill="#FFD84D"/>
+        <rect x="451.6" y="261.2" width="96.0" height="96.0" fill="#2BD47D"/>
+        <rect x="546.8" y="261.2" width="96.0" height="96.0" fill="#2EC5FF"/>
+        <rect x="166.0" y="356.4" width="96.0" height="96.0" fill="#FFB020"/>
+        <rect x="261.2" y="356.4" width="96.0" height="96.0" fill="#FFD84D"/>
+        <rect x="356.4" y="356.4" width="96.0" height="96.0" fill="#2BD47D"/>
+        <rect x="451.6" y="356.4" width="96.0" height="96.0" fill="#2EC5FF"/>
+        <rect x="546.8" y="356.4" width="96.0" height="96.0" fill="#4F8BFF"/>
+        <rect x="166.0" y="451.6" width="96.0" height="96.0" fill="#FFD84D"/>
+        <rect x="261.2" y="451.6" width="96.0" height="96.0" fill="#2BD47D"/>
+        <rect x="356.4" y="451.6" width="96.0" height="96.0" fill="#2EC5FF"/>
+        <rect x="451.6" y="451.6" width="96.0" height="96.0" fill="#4F8BFF"/>
+        <rect x="546.8" y="451.6" width="96.0" height="96.0" fill="#7B6BFF"/>
+        <rect x="166.0" y="546.8" width="96.0" height="96.0" fill="#2BD47D"/>
+        <rect x="261.2" y="546.8" width="96.0" height="96.0" fill="#2EC5FF"/>
+        <rect x="356.4" y="546.8" width="96.0" height="96.0" fill="#4F8BFF"/>
+        <rect x="451.6" y="546.8" width="96.0" height="96.0" fill="#7B6BFF"/>
+        <rect x="546.8" y="546.8" width="96.0" height="96.0" fill="#B05CFF"/>
+        <g stroke="#0D1124" stroke-opacity="0.5" stroke-width="5">
+            <line x1="261.2" y1="166" x2="261.2" y2="642"/>
+            <line x1="356.4" y1="166" x2="356.4" y2="642"/>
+            <line x1="451.6" y1="166" x2="451.6" y2="642"/>
+            <line x1="546.8" y1="166" x2="546.8" y2="642"/>
+            <line x1="166" y1="261.2" x2="642" y2="261.2"/>
+            <line x1="166" y1="356.4" x2="642" y2="356.4"/>
+            <line x1="166" y1="451.6" x2="642" y2="451.6"/>
+            <line x1="166" y1="546.8" x2="642" y2="546.8"/>
+        </g>
+        <rect x="356.4" y="356.4" width="95.2" height="95.2" fill="none" stroke="#0D1124" stroke-width="18"/>
+        <rect x="356.4" y="356.4" width="95.2" height="95.2" fill="none" stroke="#FFFFFF" stroke-width="9"/>
+        <circle cx="404" cy="404" r="238" fill="url(#shine)"/>
+    </g>
+    <g stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" opacity="0.95">
+        <line x1="404" y1="190" x2="404" y2="334"/>
+        <line x1="404" y1="473" x2="404" y2="618"/>
+        <line x1="190" y1="404" x2="334" y2="404"/>
+        <line x1="473" y1="404" x2="618" y2="404"/>
+    </g>
+    <circle cx="404" cy="404" r="253" fill="none" stroke="#05070F" stroke-opacity="0.45" stroke-width="38"/>
+    <circle cx="404" cy="404" r="253" fill="none" stroke="url(#ring)" stroke-width="30"/>
+    <circle cx="404" cy="404" r="239" fill="none" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="4"/>
+</svg>

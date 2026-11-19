@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+    <!-- ScreenMagnifier icon (small sizes, 16-32 px): magnifier over colour pixels with the picked pixel outlined. Original artwork. -->
+    <defs>
+        <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#252E58"/>
+            <stop offset="1" stop-color="#0D1124"/>
+        </linearGradient>
+        <radialGradient id="glow" cx="0.40" cy="0.38" r="0.6">
+            <stop offset="0" stop-color="#4F6BFF" stop-opacity="0.38"/>
+            <stop offset="1" stop-color="#4F6BFF" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#8CBBFF"/>
+            <stop offset="0.5" stop-color="#4F8BFF"/>
+            <stop offset="1" stop-color="#8A5CFF"/>
+        </linearGradient>
+        <linearGradient id="handle" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#F2F4FA"/>
+            <stop offset="1" stop-color="#97A3C2"/>
+        </linearGradient>
+        <linearGradient id="shine" x1="0" y1="0" x2="0.4" y2="1">
+            <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.42"/>
+            <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0"/>
+        </linearGradient>
+        <clipPath id="lens">
+            <circle cx="400" cy="400" r="250"/>
+        </clipPath>
+    </defs>
+    <rect x="32" y="32" width="960" height="960" rx="216" fill="url(#tile)"/>
+    <rect x="32" y="32" width="960" height="960" rx="216" fill="url(#glow)"/>
+    <rect x="34" y="34" width="956" height="956" rx="214" fill="none" stroke="#FFFFFF" stroke-opacity="0.09"
+          stroke-width="4"/>
+    <g transform="rotate(-45 400 400)">
+        <rect x="315" y="700" width="170" height="220" rx="85" fill="#05070F" opacity="0.5"
+              transform="translate(-14 12)"/>
+        <rect x="315" y="700" width="170" height="220" rx="85" fill="url(#handle)"/>
+        <rect x="333" y="700" width="26" height="190" rx="13" fill="#FFFFFF" opacity="0.45"/>
+        <rect x="329" y="676" width="142" height="62" rx="16" fill="#56607D"/>
+    </g>
+    <g clip-path="url(#lens)">
+        <rect x="150.0" y="150.0" width="167.5" height="167.5" fill="#FF4D8D"/>
+        <rect x="316.7" y="150.0" width="167.5" height="167.5" fill="#FFB020"/>
+        <rect x="483.3" y="150.0" width="167.5" height="167.5" fill="#2BD47D"/>
+        <rect x="150.0" y="316.7" width="167.5" height="167.5" fill="#FFB020"/>
+        <rect x="316.7" y="316.7" width="167.5" height="167.5" fill="#2BD47D"/>
+        <rect x="483.3" y="316.7" width="167.5" height="167.5" fill="#4F8BFF"/>
+        <rect x="150.0" y="483.3" width="167.5" height="167.5" fill="#2BD47D"/>
+        <rect x="316.7" y="483.3" width="167.5" height="167.5" fill="#4F8BFF"/>
+        <rect x="483.3" y="483.3" width="167.5" height="167.5" fill="#B05CFF"/>
+
+        <rect x="316.7" y="316.7" width="166.7" height="166.7" fill="none" stroke="#0D1124" stroke-width="22"/>
+        <rect x="316.7" y="316.7" width="166.7" height="166.7" fill="none" stroke="#FFFFFF" stroke-width="12"/>
+        <circle cx="400" cy="400" r="250" fill="url(#shine)"/>
+    </g>
+
+    <circle cx="400" cy="400" r="278" fill="none" stroke="#05070F" stroke-opacity="0.45" stroke-width="64"/>
+    <circle cx="400" cy="400" r="278" fill="none" stroke="url(#ring)" stroke-width="56"/>
+    <circle cx="400" cy="400" r="251" fill="none" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="4"/>
+</svg>

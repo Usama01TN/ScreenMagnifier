@@ -1,0 +1,4 @@
+ManyQt
+numpy                            # Pixel-art (Scale2x) upscaler, color detection.
+opencv-contrib-python-headless   # Bicubic, Lanczos, sharpening, AI super-resolution, face detection.
+pynput                           # Screen color picker click capture (all), global hotkeys on Linux / macOS.

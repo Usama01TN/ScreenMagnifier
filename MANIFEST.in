@@ -1,0 +1,8 @@
+include README.md requirements.txt setup.py pyproject.toml
+recursive-include ScreenMagnifier/upscaler/models *.pb LICENSE*
+recursive-include ScreenMagnifier/resources *.png *.ico *.icns
+recursive-include ScreenMagnifier/translations *.json
+recursive-include docs *.svg *.png *.py
+recursive-include tests *.py
+prune .github
+global-exclude *.py[cod] __pycache__ _buildinfo.py
