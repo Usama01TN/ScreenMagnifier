@@ -121,7 +121,7 @@ class ServerPanel(QScrollArea):
         self.__m_port.setRange(1, 65535)
         self.__m_token = QLineEdit()  # type: QLineEdit
         self.__m_token.setEchoMode(QLineEdit.Password)
-        self.__m_token.setPlaceholderText(self.tr(u'shared secret (recommended)'))
+        self.__m_token.setPlaceholderText(self.tr(u'Shared secret (recommended)'))
         for row, (text, w) in enumerate(((self.tr(u'Host'), self.__m_host), (self.tr(u'Port'), self.__m_port),
                                          (self.tr(u'Token'), self.__m_token))):
             grid.addWidget(QLabel(text), row, 0)
