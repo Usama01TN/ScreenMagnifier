@@ -1,11 +1,11 @@
 # Build dependencies of the release binaries (.github/packaging/build.py). PyQt6 has wheels for every target:
 # Linux x64 / arm64, macOS Intel / Apple Silicon, Windows x64 / arm64.
-ManyQt>=0.5,<1
-PyQt6>=6.7,<7
-numpy>=1.26
+ManyQt
+PyQt6
+numpy
 # OpenCV 4.x (tested API; 5.x is a new major version), HEADLESS: same modules without OpenCV's own Qt 5 / GTK GUI
 # libraries (~125 MB, and two Qt versions in one process can crash). No Windows ARM64 wheel: that build runs without
 # OpenCV (Qt upscaling, NumPy color detection, no face detection) - the application degrades gracefully.
-opencv-contrib-python-headless>=4.8,<5 ; platform_machine != "ARM64"
-pynput>=1.7  # global mouse hooks (screen color picker) everywhere, global hotkeys on Linux / macOS
-pyinstaller>=6.10,<7
+opencv-contrib-python-headless
+pynput  # global mouse hooks (screen color picker) everywhere, global hotkeys on Linux / macOS
+pyinstaller
