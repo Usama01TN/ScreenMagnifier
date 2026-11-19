@@ -178,7 +178,7 @@ class AdvancedOverlayController(QObject):
         self.__m_grabber.setCaptureFunction(self._windowCapture if status == 'windowCapture' else None)
         if status in ('failed', 'otherScreen') and platform == 'win32' and not ov.isExternalSource() and \
                 ov.getPlacement() in (ZoomOverlay.OnTarget, ZoomOverlay.Custom, ZoomOverlay.FullScreen) and \
-                not self.__m_tryingWindow:  # capturing the game window keeps the lens where it was asked
+                not self.__m_tryingWindow:  # Capturing the game window keeps the lens where it was asked.
             self.__m_tryingWindow = True  # type: bool
             try:
                 self._tryWindowCapture()
@@ -193,15 +193,15 @@ class AdvancedOverlayController(QObject):
         ov = self.__m_overlay  # type: ZoomOverlay
         hwnd = winWindowAt(ov.targetPos())
         if not hwnd:
-            ov.appendCaptureDetail(self.tr(u'Window capture: no application window under the target'))
+            ov.appendCaptureDetail(u'Window capture: no application window under the target')
             return
         try:
             img, dpr = winGrabWindowRect(hwnd, ov.sourceRect())
         except Exception as e:
-            ov.appendCaptureDetail(self.tr(u'Window capture failed: {}').format(e))
+            ov.appendCaptureDetail(u'Window capture failed: {}'.format(e))
             return
         if isBlankImage(img):
-            ov.appendCaptureDetail(self.tr(u'Window capture of the game returned a black image'))
+            ov.appendCaptureDetail(u'Window capture of the game returned a black image')
             return
         ov.setExternalSource(True)  # -> status 'windowCapture' -> _windowCapture becomes the grabber.
 
@@ -556,10 +556,7 @@ class AdvancedOverlayController(QObject):
         :param button: int
         :return:
         """
-        if button == 1:
-            self.screenPickRequested.emit(pos)
-        else:
-            self.stopColorPicker()
+        self.screenPickRequested.emit(pos) if button == 1 else self.stopColorPicker()
 
     def _onPickerKey(self, key):
         """
