@@ -1,7 +1,28 @@
-# Builds Screen Magnifier (GUI + headless server) natively on 3 operating systems x 2 architectures and the Python
-# package ScreenMagnifier (sdist + wheel), checks .github/FUNDING.yml, self-tests everything, and publishes a GitHub
-# release with all of it - and the donation links of FUNDING.yml in its notes - when a tag v* is pushed:
-#     git tag v1.0.0 && git push origin v1.0.0
+# Builds Screen Magnifier (GUI + headless server) for every CPU that can run it, self-tests each build, and the Python
+# package ScreenMagnifier (sdist + universal py3-none-any wheel), checks .github/FUNDING.yml, then ALWAYS publishes:
+#     * a GitHub release with every binary that was built (and the donation links of FUNDING.yml in its notes)
+#     * the Python package on PyPI
+# The release is forced: it runs on every push to main / master, on every v* tag and on every manual run - nothing
+# has to be enabled, and nothing is skipped because a version "already exists" or because one architecture failed.
+#   - tag v1.2.3 pushed        -> version 1.2.3
+#   - manual run with version  -> that version
+#   - any other push / run     -> <__version__ of ScreenMagnifier/__init__.py>.post<run number>, e.g. 1.11.0.post57
+#   The release title is v<version>, plus " - <commit message>" for a forced (non-tag) release.
+#                                 (unique and increasing, so PyPI always accepts it and a later tag still sorts higher)
+# Pull requests only build and test (a pull request must never publish).
+#
+# Binaries (13 builds, none of them can stop the release):
+#   native runners   linux x64 / arm64, windows x64 / arm64, macos x64 / arm64              (PyQt6)
+#   32-bit Windows   windows x86: 32-bit Python on the Windows runner                       (PyQt5: no PyQt6 32-bit wheels)
+#   Debian container linux x86 (i386), armv7 (armhf), armv5 (armel, Raspberry Pi 1 / Zero), ppc64le, s390x, riscv64
+#                    (QEMU when the CPU differs; PyQt5 / NumPy / OpenCV from Debian: no wheels exist for these CPUs)
+# macOS has no 32-bit build: Apple removed 32-bit support in macOS 10.15 and Qt never supported it there.
+#
+# One-time PyPI setup - either of the two (the token wins when both exist):
+#   a) Trusted publishing (no secret): pypi.org -> Your projects -> Publishing -> add a pending publisher: this
+#      repository, workflow build-release.yml, environment pypi.
+#   b) API token: pypi.org -> Account settings -> API tokens -> GitHub -> Settings -> Secrets and variables ->
+#      Actions -> secret PYPI_API_TOKEN.
 name: Build and release
 
 on:
@@ -12,7 +33,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version of a manual build (e.g. 1.2.3); empty = development build'
+        description: 'Version to release (e.g. 1.2.3); empty = <package version>.post<run number>'
         required: false
         default: ''
 
@@ -21,21 +42,60 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}  # a release in progress is never cancelled
 
 jobs:
+  version:
+    name: Version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      tag: ${{ steps.v.outputs.tag }}
+      title: ${{ steps.v.outputs.title }}
+      release: ${{ steps.v.outputs.release }}
+      prerelease: ${{ steps.v.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Version
+        id: v
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          base=$(sed -n "s/^__version__ = '\([^']*\)'.*/\1/p" ScreenMagnifier/__init__.py | head -n 1)
+          [[ -n "$base" ]] || { echo "::error::__version__ not found in ScreenMagnifier/__init__.py"; exit 1; }
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF_NAME#v}"; release=true
+          elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then v="${base}.dev${GITHUB_RUN_NUMBER}"; release=false
+          elif [[ -n "$INPUT_VERSION" ]]; then v="${INPUT_VERSION#v}"; release=true
+          else v="${base}.post${GITHUB_RUN_NUMBER}"; release=true; fi
+          python -m pip install --quiet packaging
+          prerelease=$(python -c "from packaging.version import Version; v = Version('$v'); print(str(v.is_prerelease).lower())")
+          # Release title: always starts with v<version>. A pushed tag is just that; a forced release of a push / manual
+          # run adds the first line of the commit message: "v1.11.0.post57 - Fix the zoom lens".
+          subject=$(git log -1 --format=%s | head -n 1 | tr -d '\r' | cut -c1-80)
+          if [[ "$GITHUB_REF" == refs/tags/v* || -z "$subject" ]]; then title="v$v"; else title="v$v - $subject"; fi
+          { echo "version=$v"; echo "tag=v$v"; echo "title=$title"; echo "release=$release"; echo "prerelease=$prerelease"; } >> "$GITHUB_OUTPUT"
+          echo "Version: $v (release: $release, prerelease: $prerelease), title: $title"
+
   build:
     name: ${{ matrix.os }}-${{ matrix.arch }}
+    needs: version
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     strategy:
-      fail-fast: false
+      fail-fast: false  # one failing architecture never stops the others (or the release)
       matrix:
         include:  # explicit runner labels: -latest aliases move to new OS versions
           - { runner: ubuntu-24.04,     os: linux,   arch: x64 }
           - { runner: ubuntu-24.04-arm, os: linux,   arch: arm64 }
           - { runner: windows-2025,     os: windows, arch: x64 }
           - { runner: windows-11-arm,   os: windows, arch: arm64 }
+          - { runner: windows-2025,     os: windows, arch: x86, pyarch: x86, qt: pyqt5, requirements: requirements-build-pyqt5.txt }
           - { runner: macos-15-intel,   os: macos,   arch: x64 }
           - { runner: macos-15,         os: macos,   arch: arm64 }
     defaults:
@@ -47,8 +107,9 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+          architecture: ${{ matrix.pyarch }}  # empty = the runner's own; x86 = 32-bit Python
           cache: pip
-          cache-dependency-path: .github/packaging/requirements-build.txt
+          cache-dependency-path: .github/packaging/requirements-build*.txt
 
       - name: Linux system libraries (Qt runtime, pynput build)
         if: runner.os == 'Linux'
@@ -61,22 +122,11 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r .github/packaging/requirements-build.txt
-
-      - name: Version
-        id: version
-        env:
-          INPUT_VERSION: ${{ inputs.version }}
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF_NAME#v}"
-          elif [[ -n "$INPUT_VERSION" ]]; then v="$INPUT_VERSION"
-          else v="0.0.0-dev.${GITHUB_SHA::7}"; fi
-          echo "version=$v" >> "$GITHUB_OUTPUT"
-          echo "Version: $v"
+          python -m pip install -r ".github/packaging/${{ matrix.requirements || 'requirements-build.txt' }}"
 
       - name: Build, self-test and package
         id: build
-        run: python .github/packaging/build.py --version "${{ steps.version.outputs.version }}"
+        run: python .github/packaging/build.py --version "${{ needs.version.outputs.version }}" --qt-api "${{ matrix.qt || 'pyqt6' }}" --arch "${{ matrix.arch }}"
 
       - uses: actions/upload-artifact@v5
         with:
@@ -85,8 +135,46 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  build-container:
+    # The CPUs without a hosted runner and without Qt wheels: a Debian container per CPU (QEMU emulates it where it is
+    # not the runner's own; linux/386 runs natively on the x64 runner). Slow (emulated PyInstaller), so it gets a long
+    # timeout; a leg that fails is reported in the release notes and never blocks the release.
+    name: linux-${{ matrix.arch }} (container)
+    needs: version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x86,     platform: linux/386,     image: 'debian:bookworm' }
+          - { arch: armv7,   platform: linux/arm/v7,  image: 'debian:bookworm' }
+          - { arch: armv5,   platform: linux/arm/v5,  image: 'debian:bookworm' }
+          - { arch: ppc64le, platform: linux/ppc64le, image: 'debian:bookworm' }
+          - { arch: s390x,   platform: linux/s390x,   image: 'debian:bookworm' }
+          - { arch: riscv64, platform: linux/riscv64, image: 'debian:trixie' }  # Debian 12 has no riscv64
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-qemu-action@v3
+
+      - name: Build, self-test and package in ${{ matrix.image }} (${{ matrix.platform }})
+        run: |
+          docker run --rm --platform "${{ matrix.platform }}" \
+            -e SM_VERSION="${{ needs.version.outputs.version }}" -e SM_ARCH="${{ matrix.arch }}" \
+            -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
+            -v "$PWD":/work -w /work "${{ matrix.image }}" bash .github/packaging/build-in-container.sh
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: ScreenMagnifier-linux-${{ matrix.arch }}
+          path: dist/ScreenMagnifier-*-linux-${{ matrix.arch }}.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+
   python-package:
     name: Python package (sdist + wheel)
+    needs: version
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -96,12 +184,13 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Version from the tag
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Set the release version in the package
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
         run: |
           python - <<'PY'
           import os, re
-          version = os.environ['GITHUB_REF_NAME'][1:]
+          version = os.environ['VERSION']
           text = open('ScreenMagnifier/__init__.py').read()
           text = re.sub(r"__version__ = '[^']*'", "__version__ = '%s'" % version, text, count=1)
           open('ScreenMagnifier/__init__.py', 'w').write(text)
@@ -143,13 +232,20 @@ jobs:
 
   release:
     name: GitHub release
-    needs: [build, python-package]
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [version, build, build-container, python-package]
+    # Forced: runs even when a build leg or the package job failed (!cancelled() instead of the default success()),
+    # on every push / tag / manual run. Only pull requests never release.
+    if: ${{ !cancelled() && needs.version.outputs.release == 'true' }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
 
       - name: Release notes - "Support the project" from .github/FUNDING.yml
         run: |
@@ -161,31 +257,46 @@ jobs:
           path: artifacts
           merge-multiple: true
 
-      - name: Checksums
+      - name: Checksums and build report
         run: |
+          mkdir -p artifacts
           cd artifacts
-          sha256sum ScreenMagnifier-* screenmagnifier-* > SHA256SUMS.txt
-          cat SHA256SUMS.txt
+          missing=""
+          for target in linux-x64 linux-arm64 linux-x86 linux-armv7 linux-armv5 linux-ppc64le linux-s390x linux-riscv64 \
+                        windows-x64 windows-arm64 windows-x86 macos-x64 macos-arm64; do
+            ls ScreenMagnifier-*-"$target".* > /dev/null 2>&1 || missing="$missing $target"
+          done
+          if [[ -n "$missing" ]]; then
+            { echo; echo "> **Builds missing in this release (they failed in CI, see the workflow run):**$missing"; } >> "$RUNNER_TEMP/notes.md"
+            echo "::warning::Released without:$missing"
+          fi
+          ls -la
+          files=$(ls ScreenMagnifier-* screenmagnifier-* 2> /dev/null || true)
+          [[ -z "$files" ]] || sha256sum $files | tee SHA256SUMS.txt
 
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}  # creates the tag when it does not exist yet; an existing release is updated
+          name: ${{ needs.version.outputs.title }}
           files: artifacts/*
           body_path: ${{ runner.temp }}/notes.md
           generate_release_notes: true
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          prerelease: ${{ needs.version.outputs.prerelease == 'true' }}
+          make_latest: ${{ needs.version.outputs.prerelease != 'true' }}
+          fail_on_unmatched_files: false
 
   pypi:
-    # Optional: publish the Python package to PyPI on tags. Off until you enable it - one-time setup:
-    #   1. pypi.org -> your account -> Publishing -> add a "trusted publisher": this repository, workflow
-    #      build-release.yml, environment pypi (no password or token is stored anywhere).
-    #   2. GitHub -> Settings -> Secrets and variables -> Actions -> Variables: PUBLISH_TO_PYPI = true
+    # Forced as well: no variable to enable. PyPI never accepts a file twice, so a version that is already there
+    # (re-run of the same tag) is skipped by the upload instead of failing the run; every new version is published.
     name: Publish to PyPI
-    needs: [build, python-package]
-    if: startsWith(github.ref, 'refs/tags/v') && vars.PUBLISH_TO_PYPI == 'true'
+    needs: [version, python-package]
+    if: ${{ !cancelled() && needs.version.outputs.release == 'true' && needs.python-package.result == 'success' }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     environment: pypi
     permissions:
-      id-token: write
+      id-token: write  # trusted publishing (used when the PYPI_API_TOKEN secret is not set)
     steps:
       - uses: actions/download-artifact@v5
         with:
@@ -193,3 +304,6 @@ jobs:
           path: dist
 
       - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}  # empty = trusted publishing
+          skip-existing: true

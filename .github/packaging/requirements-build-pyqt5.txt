@@ -1,0 +1,9 @@
+# Build dependencies of the 32-bit Windows (x86) release binary: PyQt6 and PySide6 have no 32-bit wheels, PyQt5 has
+# (PyQt5 5.15.11 + PyQt5-Qt5 5.15.2, win32). Used with: build.py --qt-api pyqt5 --arch x86, on a 32-bit Python.
+ManyQt
+PyQt5
+numpy
+# HEADLESS OpenCV (no second Qt in the bundle); it has a win32 wheel.
+opencv-contrib-python-headless
+pynput  # global mouse hooks (screen color picker) everywhere, global hotkeys on Linux / macOS
+pyinstaller
