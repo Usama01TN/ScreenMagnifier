@@ -6,7 +6,7 @@
 # has to be enabled, and nothing is skipped because a version "already exists" or because one architecture failed.
 #   - tag v1.2.3 pushed        -> version 1.2.3
 #   - manual run with version  -> that version
-#   - any other push / run     -> <__version__ of ScreenMagnifier/__init__.py>.post<run number>, e.g. 1.11.0.post57
+#   - any other push / run     -> <__version__ of ScreenMagnifier/__init__.py>, e.g. 1.11.0
 #                                 (unique and increasing, so PyPI always accepts it and a later tag still sorts higher)
 # Pull requests only build and test (a pull request must never publish).
 #
@@ -32,7 +32,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g. 1.2.3); empty = <package version>.post<run number>'
+        description: 'Version to release (e.g. 1.2.3); empty = <package version>'
         required: false
         default: ''
 
@@ -70,7 +70,7 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF_NAME#v}"; release=true
           elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then v="${base}.dev${GITHUB_RUN_NUMBER}"; release=false
           elif [[ -n "$INPUT_VERSION" ]]; then v="${INPUT_VERSION#v}"; release=true
-          else v="${base}.post${GITHUB_RUN_NUMBER}"; release=true; fi
+          else v="${base}"; release=true; fi
           python -m pip install --quiet packaging
           prerelease=$(python -c "from packaging.version import Version; v = Version('$v'); print(str(v.is_prerelease).lower())")
           { echo "version=$v"; echo "tag=v$v"; echo "release=$release"; echo "prerelease=$prerelease"; } >> "$GITHUB_OUTPUT"
