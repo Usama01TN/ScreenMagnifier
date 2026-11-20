@@ -164,10 +164,10 @@ With the analysis server, frames travel losslessly (exact colors).
   equalisation (CLAHE): letterbox bars or a plain desktop around a video do not hide the faces.
 - **Modes**: boxes, boxes + landmarks, or **privacy blur** (pixelates every face in the magnifier and lens).
 
-### Face pointer (watching films)
+### Face pointer:
 
 *Detection* tab -> **Follow the faces on the screen**, or **Ctrl+Alt+F** anywhere: the mouse pointer glides to
-the faces of the film (the largest one, or the one nearest the pointer), and stays with a face while it moves.
+the faces (the largest one, or the one nearest the pointer), and stays with a face while it moves.
 
 - **What follows the face**: the mouse pointer, or **only the zoomer** - the zoomer magnifies the face and the
   pointer stays still (video players show their controls when the pointer moves).
@@ -178,9 +178,9 @@ the faces of the film (the largest one, or the one nearest the pointer), and sta
 - Wayland, and macOS without the Accessibility permission, do not let applications move the pointer: the
   face pointer says so - choose *Only the zoomer* there.
 
-**Offline games** (*How to move*):
+**Video games** (*How to move*):
 
-- **Automatic** (default): moves the pointer (films, menus) and **centres the enemy's face on the screen** while a
+- **Automatic** (default): moves the pointer (video/games, menus) and **centres the enemy's face on the screen** while a
   game captures the mouse - the system says the pointer is confined (Windows) or hidden while it is moved (a
   resting video player shows it again), or the game puts it back on the same spot. When a menu shows the pointer
   again, the pointer is moved again.
