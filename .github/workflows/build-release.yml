@@ -1,13 +1,12 @@
 # Builds Screen Magnifier (GUI + headless server) for every CPU that can run it, self-tests each build, and the Python
 # package ScreenMagnifier (sdist + universal py3-none-any wheel), checks .github/FUNDING.yml, then ALWAYS publishes:
-#     * a GitHub release with every binary that was built (and the donation links of FUNDING.yml in its notes)
+#     * a GitHub release with every binary that was built (title: v<version>; description: only the Full Changelog link)
 #     * the Python package on PyPI
 # The release is forced: it runs on every push to main / master, on every v* tag and on every manual run - nothing
 # has to be enabled, and nothing is skipped because a version "already exists" or because one architecture failed.
 #   - tag v1.2.3 pushed        -> version 1.2.3
 #   - manual run with version  -> that version
 #   - any other push / run     -> <__version__ of ScreenMagnifier/__init__.py>.post<run number>, e.g. 1.11.0.post57
-#   The release title is v<version>, plus " - <commit message>" for a forced (non-tag) release.
 #                                 (unique and increasing, so PyPI always accepts it and a later tag still sorts higher)
 # Pull requests only build and test (a pull request must never publish).
 #
@@ -52,7 +51,6 @@ jobs:
     outputs:
       version: ${{ steps.v.outputs.version }}
       tag: ${{ steps.v.outputs.tag }}
-      title: ${{ steps.v.outputs.title }}
       release: ${{ steps.v.outputs.release }}
       prerelease: ${{ steps.v.outputs.prerelease }}
     steps:
@@ -75,12 +73,8 @@ jobs:
           else v="${base}.post${GITHUB_RUN_NUMBER}"; release=true; fi
           python -m pip install --quiet packaging
           prerelease=$(python -c "from packaging.version import Version; v = Version('$v'); print(str(v.is_prerelease).lower())")
-          # Release title: always starts with v<version>. A pushed tag is just that; a forced release of a push / manual
-          # run adds the first line of the commit message: "v1.11.0.post57 - Fix the zoom lens".
-          subject=$(git log -1 --format=%s | head -n 1 | tr -d '\r' | cut -c1-80)
-          if [[ "$GITHUB_REF" == refs/tags/v* || -z "$subject" ]]; then title="v$v"; else title="v$v - $subject"; fi
-          { echo "version=$v"; echo "tag=v$v"; echo "title=$title"; echo "release=$release"; echo "prerelease=$prerelease"; } >> "$GITHUB_OUTPUT"
-          echo "Version: $v (release: $release, prerelease: $prerelease), title: $title"
+          { echo "version=$v"; echo "tag=v$v"; echo "release=$release"; echo "prerelease=$prerelease"; } >> "$GITHUB_OUTPUT"
+          echo "Version: $v (release: $release, prerelease: $prerelease)"
 
   build:
     name: ${{ matrix.os }}-${{ matrix.arch }}
@@ -138,7 +132,7 @@ jobs:
   build-container:
     # The CPUs without a hosted runner and without Qt wheels: a Debian container per CPU (QEMU emulates it where it is
     # not the runner's own; linux/386 runs natively on the x64 runner). Slow (emulated PyInstaller), so it gets a long
-    # timeout; a leg that fails is reported in the release notes and never blocks the release.
+    # timeout; a leg that fails is reported as a warning of the run and never blocks the release.
     name: linux-${{ matrix.arch }} (container)
     needs: version
     runs-on: ubuntu-24.04
@@ -149,10 +143,12 @@ jobs:
         include:
           - { arch: x86,     platform: linux/386,     image: 'debian:bookworm' }
           - { arch: armv7,   platform: linux/arm/v7,  image: 'debian:bookworm' }
-          - { arch: armv5,   platform: linux/arm/v5,  image: 'debian:bookworm' }
-          - { arch: ppc64le, platform: linux/ppc64le, image: 'debian:bookworm' }
-          - { arch: s390x,   platform: linux/s390x,   image: 'debian:bookworm' }
-          - { arch: riscv64, platform: linux/riscv64, image: 'debian:trixie' }  # Debian 12 has no riscv64
+          # Debian 12 (bookworm) is in LTS: its official image only still has amd64, arm64, armhf and i386.
+          # Debian 13 (trixie) has every CPU below (and a newer glibc: 2.41 instead of 2.36).
+          - { arch: armv5,   platform: linux/arm/v5,  image: 'debian:trixie' }
+          - { arch: ppc64le, platform: linux/ppc64le, image: 'debian:trixie' }
+          - { arch: s390x,   platform: linux/s390x,   image: 'debian:trixie' }
+          - { arch: riscv64, platform: linux/riscv64, image: 'debian:trixie' }
     steps:
       - uses: actions/checkout@v5
 
@@ -243,14 +239,18 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.12'
-
-      - name: Release notes - "Support the project" from .github/FUNDING.yml
+      - name: Release description - only the Full Changelog link
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.version.outputs.tag }}
         run: |
-          python -m pip install pyyaml
-          python .github/packaging/funding.py --notes "$RUNNER_TEMP/notes.md"
+          # GitHub writes the comparison with the previous release; only its "Full Changelog" line is kept.
+          body=$(gh api -X POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+                   -f tag_name="$TAG" -f target_commitish="$GITHUB_SHA" --jq .body 2> /dev/null || true)
+          line=$(printf '%s\n' "$body" | grep -m 1 '^\*\*Full Changelog\*\*' || true)
+          # the very first release has no previous one to compare with: link its commits instead
+          [[ -n "$line" ]] || line="**Full Changelog**: https://github.com/$GITHUB_REPOSITORY/commits/$TAG"
+          printf '%s\n' "$line" | tee "$RUNNER_TEMP/notes.md"
 
       - uses: actions/download-artifact@v5
         with:
@@ -267,8 +267,8 @@ jobs:
             ls ScreenMagnifier-*-"$target".* > /dev/null 2>&1 || missing="$missing $target"
           done
           if [[ -n "$missing" ]]; then
-            { echo; echo "> **Builds missing in this release (they failed in CI, see the workflow run):**$missing"; } >> "$RUNNER_TEMP/notes.md"
-            echo "::warning::Released without:$missing"
+            echo "::warning::Released without:$missing (their build failed: see the jobs of this run)"
+            echo "**Builds missing in this release (they failed in CI):**$missing" >> "$GITHUB_STEP_SUMMARY"
           fi
           ls -la
           files=$(ls ScreenMagnifier-* screenmagnifier-* 2> /dev/null || true)
@@ -278,10 +278,9 @@ jobs:
         with:
           tag_name: ${{ needs.version.outputs.tag }}
           target_commitish: ${{ github.sha }}  # creates the tag when it does not exist yet; an existing release is updated
-          name: ${{ needs.version.outputs.title }}
+          name: ${{ needs.version.outputs.tag }}
           files: artifacts/*
           body_path: ${{ runner.temp }}/notes.md
-          generate_release_notes: true
           prerelease: ${{ needs.version.outputs.prerelease == 'true' }}
           make_latest: ${{ needs.version.outputs.prerelease != 'true' }}
           fail_on_unmatched_files: false
