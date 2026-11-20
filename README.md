@@ -18,6 +18,10 @@ live color code and zone; the Colors tab follows the same live color. Captured f
 Inspect small UI details, read tiny text, check pixel alignment and pick colours, with an image that
 stays sharp at high magnification instead of turning into a blurry or blocky mess.
 
+<p align="center"><img src="docs/meme.png" alt="Meme: without ScreenMagnifier a shrimp hunches over the laptop to read tiny text; with ScreenMagnifier the same shrimp sits upright and reads the zoomed window" width="100%"></p>
+
+*Zoom in, sit back, keep your spine.*
+
 ## In-advanced zoom (works while you play):
 
 Start the app (optionally straight into the tray with `python main.py --tray`), switch to your game and press:
@@ -398,7 +402,7 @@ ScreenMagnifier/                 the repository
 ├── setup.py, pyproject.toml, MANIFEST.in, requirements.txt, README.md
 ├── tests/                       pytest suite (pip install -e ".[all]" && pytest tests)
 ├── .github/                     FUNDING.yml, workflows/build-release.yml, packaging/ (release builds)
-├── docs/                        icon / banner / screenshot (sources and generators)
+├── docs/                        icon / banner / screenshot / meme (sources and generators)
 └── ScreenMagnifier/             the package: import ScreenMagnifier
     ├── __init__.py, __main__.py, main.py, mainwindow.py, server.py, ...
     └── upscaler/, colordetector/, zoomoverlay/, ...   one feature per subpackage, each with a demo
@@ -410,9 +414,10 @@ Importing the package never changes `sys.path`; the standalone demos (`python <c
 
 `docs/` holds the editable sources: `icon.svg` (48 px and larger) and `icon-small.svg` (16 - 32 px: a simplified
 drawing, fine detail turns to mush at those sizes), `banner.png` (1280 x 640: also the size of GitHub's *social
-preview*, set in the repository *Settings*), `screenshot.png`, and the scripts that rebuild them -
-`make_icons.py` (PNG 16 - 512, Windows `.ico`, macOS `.icns` into `ScreenMagnifier/resources/`),
-`make_screenshot.py` (captures the real application over an original pixel-art scene) and `make_banner.py`.
+preview*, set in the repository *Settings*), `screenshot.png`, `meme-before-after.png` (the shrimp meme of the
+introduction), and the scripts that rebuild them - `make_icons.py` (PNG 16 - 512, Windows `.ico`, macOS `.icns` into
+`ScreenMagnifier/resources/`), `make_screenshot.py` (captures the real application over an original pixel-art scene)
+and `make_banner.py`.
 
 ## Contents:
 
